@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>Jeopardy – Schmobin Style (Neue Fragen)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background: linear-gradient(to bottom, #0f172a, #1e293b);
+    }
+    .card {
+      transition: all 0.2s ease-in-out;
+    }
+    .card:hover {
+      background-color: #3b82f6;
+      transform: scale(1.05);
+      box-shadow: 0 0 15px #3b82f6;
+      cursor: pointer;
+    }
+    #modal {
+      animation: fadeIn 0.3s ease-out;
+    }
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+  </style>
+</head>
+<body class="text-white font-sans min-h-screen py-10 px-4">
+
+  <div class="flex justify-between items-start max-w-7xl mx-auto mb-6">
+    <h1 class="text-5xl font-extrabold text-yellow-400 drop-shadow-lg">🎮 JEOPARDY</h1>
+    <button
+      onclick="addPlayerPrompt()"
+      class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-bold shadow-md text-lg"
+    >
+      + Spieler
+    </button>
+  </div>
+
+  <div id="board" class="grid grid-cols-5 gap-2 w-full max-w-7xl mx-auto mb-10"></div>
+
+  <!-- Spielerbereich -->
+  <div id="players" class="flex flex-wrap gap-6 justify-center mt-10 px-4"></div>
+
+  <!-- Modal -->
+  <div
+    id="modal"
+    class="fixed inset-0 bg-black bg-opacity-90 hidden items-center justify-center z-50"
+  >
+    <div
+      class="bg-gray-900 rounded-2xl p-8 w-[90%] max-w-2xl text-center border-4 border-yellow-400"
+    >
+      <h2
+        id="modal-category"
+        class="text-2xl font-semibold mb-3 text-yellow-300 uppercase tracking-wide"
+      ></h2>
+      <p
+        id="modal-question"
+        class="text-3xl font-bold mb-6 leading-snug"
+      ></p>
+      <p id="modal-answer" class="text-green-400 text-xl hidden mb-6"></p>
+      <div class="flex justify-center gap-4">
+        <button
+          onclick="showAnswer()"
+          class="bg-green-500 hover:bg-green-600 px-6 py-2 rounded-full font-bold shadow-md"
+        >
+          Antwort
+        </button>
+        <button
+          onclick="closeModal()"
+          class="bg-red-600 hover:bg-red-700 px-6 py-2 rounded-full font-bold shadow-md"
+        >
+          Schließen
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const categories = ["Geschichte", "Wissenschaft", "Popkultur", "Geografie", "Technik"];
+    const questions = {
+      Geschichte: {
+        100: { q: "Wann wurde die Berliner Mauer gebaut?", a: "1961" },
+        200: { q: "Wer war Napoleon Bonaparte?", a: "Französischer Kaiser" },
+        300: { q: "Was war die Weimarer Republik?", a: "Die deutsche Regierung 1919-1933" },
+        400: { q: "Wann begann die Französische Revolution?", a: "1789" },
+        500: { q: "Wer war Kleopatra?", a: "Letzte aktive Pharaonin Ägyptens" },
+      },
+      Wissenschaft: {
+        100: { q: "Was ist die kleinste Einheit des Lebens?", a: "Die Zelle" },
+        200: { q: "Was misst ein Thermometer?", a: "Temperatur" },
+        300: { q: "Wer entdeckte die Schwerkraft?", a: "Isaac Newton" },
+        400: { q: "Was sind DNA-Basen?", a: "Adenin, Thymin, Cytosin, Guanin" },
+        500: { q: "Was beschreibt die Relativitätstheorie?", a: "Zeit und Raum sind relativ" },
+      },
+      Popkultur: {
+        100: { q: "Wer spielte Neo in 'Matrix'?", a: "Keanu Reeves" },
+        200: { q: "Wie heißt der Zauberer in 'Herr der Ringe'?", a: "Gandalf" },
+        300: { q: "Welche Band veröffentlichte 'Bohemian Rhapsody'?", a: "Queen" },
+        400: { q: "Wer ist die Regisseurin von 'Wonder Woman'?", a: "Patty Jenkins" },
+        500: { q: "Welcher Film gewann den Oscar 1994 als bester Film?", a: "Forrest Gump" },
+      },
+      Geografie: {
+        100: { q: "Was ist die Hauptstadt von Frankreich?", a: "Paris" },
+        200: { q: "Welcher Fluss fließt durch London?", a: "Themse" },
+        300: { q: "Wo liegt der Kilimandscharo?", a: "Tansania" },
+        400: { q: "Welcher Ozean ist der größte?", a: "Pazifischer Ozean" },
+        500: { q: "Welches Land hat die meisten Vulkane?", a: "Indonesien" },
+      },
+      Technik: {
+        100: { q: "Was ist ein Byte?", a: "Speichereinheit (8 Bits)" },
+        200: { q: "Was bedeutet CPU?", a: "Central Processing Unit" },
+        300: { q: "Wer erfand das World Wide Web?", a: "Tim Berners-Lee" },
+        400: { q: "Was ist ein Algorithmus?", a: "Eine Folge von Schritten zur Problemlösung" },
+        500: { q: "Was bedeutet 'Open Source'?", a: "Quellcode öffentlich zugänglich" },
+      }
+    };
+
+    const board = document.getElementById("board");
+    const modal = document.getElementById("modal");
+    const modalQuestion = document.getElementById("modal-question");
+    const modalAnswer = document.getElementById("modal-answer");
+    const modalCategory = document.getElementById("modal-category");
+    const playersDiv = document.getElementById("players");
+
+    let players = [];
+
+    function buildBoard() {
+      categories.forEach(category => {
+        const header = document.createElement("div");
+        header.className = "bg-yellow-500 text-black text-center font-bold py-3 text-lg uppercase rounded";
+        header.innerText = category;
+        board.appendChild(header);
+      });
+
+      for (let value of [100, 200, 300, 400, 500]) {
+        categories.forEach(category => {
+          const card = document.createElement("div");
+          card.className = "card bg-blue-800 text-5xl text-center py-8 rounded-xl font-bold shadow-lg";
+          card.innerText = value;
+          card.onclick = () => openQuestion(category, value, card);
+          board.appendChild(card);
+        });
+      }
+    }
+
+    function openQuestion(category, value, card) {
+      const data = questions[category][value];
+      if (!data) return;
+
+      modalCategory.innerText = `${category} – ${value} Punkte`;
+      modalQuestion.innerText = data.q;
+      modalAnswer.innerText = data.a;
+      modalAnswer.classList.add("hidden");
+      modal.style.display = "flex";
+
+      card.innerText = "";
+      card.classList.add("bg-gray-700");
+      card.onclick = null;
+    }
+
+    function showAnswer() {
+      modalAnswer.classList.remove("hidden");
+    }
+
+    function closeModal() {
+      modal.style.display = "none";
+    }
+
+    function addPlayerPrompt() {
+      const name = prompt("Spielername:");
+      if (name && name.trim() !== "") {
+        addPlayer(name.trim());
+      }
+    }
+
+    function addPlayer(name) {
+      const player = { name, score: 0 };
+      players.push(player);
+
+      const container = document.createElement("div");
+      container.className = "bg-gray-800 px-6 py-4 rounded-xl text-center shadow-lg";
+
+      const nameEl = document.createElement("h3");
+      nameEl.className = "text-xl font-bold mb-2 text-yellow-300";
+      nameEl.innerText = name;
+
+      const scoreEl = document.createElement("p");
+      scoreEl.className = "text-3xl font-mono mb-4";
+      scoreEl.innerText = "0";
+
+      const btns = document.createElement("div");
+      btns.className = "flex gap-2 justify-center";
+
+      const minus = document.createElement("button");
+      minus.innerText = "–";
+      minus.className = "bg-red-600 hover:bg-red-700 px-4 py-2 rounded-full text-2xl font-bold";
+      minus.onclick = () => {
+        player.score -= 100;
+        scoreEl.innerText = player.score;
+      };
+
+      const plus = document.createElement("button");
+      plus.innerText = "+";
+      plus.className = "bg-green-600 hover:bg-green-700 px-4 py-2 rounded-full text-2xl font-bold";
+      plus.onclick = () => {
+        player.score += 100;
+        scoreEl.innerText = player.score;
+      };
+
+      btns.appendChild(minus);
+      btns.appendChild(plus);
+
+      container.appendChild(nameEl);
+      container.appendChild(scoreEl);
+      container.appendChild(btns);
+
+      playersDiv.appendChild(container);
+    }
+
+    buildBoard();
+  </script>
+</body>
+</html>
