@@ -30,24 +30,23 @@
         transform: scale(1);
       }
     }
+    button:focus {
+      outline: none;
+    }
   </style>
 </head>
-<body class="text-white font-sans min-h-screen py-10 px-4">
+<body class="text-white font-sans min-h-screen py-10 px-4 flex flex-col items-center">
 
-  <div class="flex justify-between items-start max-w-7xl mx-auto mb-6">
-    <h1 class="text-5xl font-extrabold text-yellow-400 drop-shadow-lg">🎮 JEOPARDY</h1>
-    <button
-      onclick="addPlayerPrompt()"
-      class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-bold shadow-md text-lg"
-    >
-      + Spieler
-    </button>
+  <div class="flex justify-between items-center max-w-7xl w-full mx-auto mb-6 px-4">
+    <button id="prevBoard" class="text-yellow-400 text-4xl font-bold hover:text-yellow-300 select-none">&larr;</button>
+    <h1 id="boardTitle" class="text-5xl font-extrabold text-yellow-400 drop-shadow-lg text-center flex-1">🎮 JEOPARDY Board 1</h1>
+    <button id="nextBoard" class="text-yellow-400 text-4xl font-bold hover:text-yellow-300 select-none">&rarr;</button>
   </div>
 
   <div id="board" class="grid grid-cols-5 gap-2 w-full max-w-7xl mx-auto mb-10"></div>
 
   <!-- Spielerbereich -->
-  <div id="players" class="flex flex-wrap gap-6 justify-center mt-10 px-4"></div>
+  <div id="players" class="flex flex-wrap gap-6 justify-center mt-10 px-4 max-w-7xl w-full"></div>
 
   <!-- Modal -->
   <div
@@ -83,149 +82,233 @@
     </div>
   </div>
 
-  <script>
-    const categories = ["Geschichte", "Wissenschaft", "Popkultur", "Geografie", "Technik"];
-    const questions = {
-      Geschichte: {
-        100: { q: "Wann wurde die Berliner Mauer gebaut?", a: "1961" },
-        200: { q: "Wer war Napoleon Bonaparte?", a: "Französischer Kaiser" },
-        300: { q: "Was war die Weimarer Republik?", a: "Die deutsche Regierung 1919-1933" },
-        400: { q: "Wann begann die Französische Revolution?", a: "1789" },
-        500: { q: "Wer war Kleopatra?", a: "Letzte aktive Pharaonin Ägyptens" },
-      },
-      Wissenschaft: {
-        100: { q: "Was ist die kleinste Einheit des Lebens?", a: "Die Zelle" },
-        200: { q: "Was misst ein Thermometer?", a: "Temperatur" },
-        300: { q: "Wer entdeckte die Schwerkraft?", a: "Isaac Newton" },
-        400: { q: "Was sind DNA-Basen?", a: "Adenin, Thymin, Cytosin, Guanin" },
-        500: { q: "Was beschreibt die Relativitätstheorie?", a: "Zeit und Raum sind relativ" },
-      },
-      Popkultur: {
-        100: { q: "Wer spielte Neo in 'Matrix'?", a: "Keanu Reeves" },
-        200: { q: "Wie heißt der Zauberer in 'Herr der Ringe'?", a: "Gandalf" },
-        300: { q: "Welche Band veröffentlichte 'Bohemian Rhapsody'?", a: "Queen" },
-        400: { q: "Wer ist die Regisseurin von 'Wonder Woman'?", a: "Patty Jenkins" },
-        500: { q: "Welcher Film gewann den Oscar 1994 als bester Film?", a: "Forrest Gump" },
-      },
-      Geografie: {
-        100: { q: "Was ist die Hauptstadt von Frankreich?", a: "Paris" },
-        200: { q: "Welcher Fluss fließt durch London?", a: "Themse" },
-        300: { q: "Wo liegt der Kilimandscharo?", a: "Tansania" },
-        400: { q: "Welcher Ozean ist der größte?", a: "Pazifischer Ozean" },
-        500: { q: "Welches Land hat die meisten Vulkane?", a: "Indonesien" },
-      },
-      Technik: {
-        100: { q: "Was ist ein Byte?", a: "Speichereinheit (8 Bits)" },
-        200: { q: "Was bedeutet CPU?", a: "Central Processing Unit" },
-        300: { q: "Wer erfand das World Wide Web?", a: "Tim Berners-Lee" },
-        400: { q: "Was ist ein Algorithmus?", a: "Eine Folge von Schritten zur Problemlösung" },
-        500: { q: "Was bedeutet 'Open Source'?", a: "Quellcode öffentlich zugänglich" },
+<script>
+  const boards = [
+    {
+      name: "Board 1",
+      categories: ["Geschichte", "Wissenschaft", "Popkultur", "Geografie", "Technik"],
+      questions: {
+        Geschichte: {
+          100: { q: "Wann wurde die Berliner Mauer gebaut?", a: "1961" },
+          200: { q: "Wer war Napoleon Bonaparte?", a: "Französischer Kaiser" },
+          300: { q: "Was war die Weimarer Republik?", a: "Die deutsche Regierung 1919-1933" },
+          400: { q: "Wann begann die Französische Revolution?", a: "1789" },
+          500: { q: "Wer war Kleopatra?", a: "Letzte aktive Pharaonin Ägyptens" },
+        },
+        Wissenschaft: {
+          100: { q: "Was ist die kleinste Einheit des Lebens?", a: "Die Zelle" },
+          200: { q: "Was misst ein Thermometer?", a: "Temperatur" },
+          300: { q: "Wer entdeckte die Schwerkraft?", a: "Isaac Newton" },
+          400: { q: "Was sind DNA-Basen?", a: "Adenin, Thymin, Cytosin, Guanin" },
+          500: { q: "Was beschreibt die Relativitätstheorie?", a: "Zeit und Raum sind relativ" },
+        },
+        Popkultur: {
+          100: { q: "Wer spielte Neo in 'Matrix'?", a: "Keanu Reeves" },
+          200: { q: "Wie heißt der Zauberer in 'Herr der Ringe'?", a: "Gandalf" },
+          300: { q: "Welche Band veröffentlichte 'Bohemian Rhapsody'?", a: "Queen" },
+          400: { q: "Wer ist die Regisseurin von 'Wonder Woman'?", a: "Patty Jenkins" },
+          500: { q: "Welcher Film gewann den Oscar 1994 als bester Film?", a: "Forrest Gump" },
+        },
+        Geografie: {
+          100: { q: "Was ist die Hauptstadt von Frankreich?", a: "Paris" },
+          200: { q: "Welcher Fluss fließt durch London?", a: "Themse" },
+          300: { q: "Wo liegt der Kilimandscharo?", a: "Tansania" },
+          400: { q: "Welcher Ozean ist der größte?", a: "Pazifischer Ozean" },
+          500: { q: "Welches Land hat die meisten Vulkane?", a: "Indonesien" },
+        },
+        Technik: {
+          100: { q: "Was ist ein Byte?", a: "Speichereinheit (8 Bits)" },
+          200: { q: "Was bedeutet CPU?", a: "Central Processing Unit" },
+          300: { q: "Wer erfand das World Wide Web?", a: "Tim Berners-Lee" },
+          400: { q: "Was ist ein Algorithmus?", a: "Eine Folge von Schritten zur Problemlösung" },
+          500: { q: "Was bedeutet 'Open Source'?", a: "Quellcode öffentlich zugänglich" },
+        }
       }
+    },
+    {
+      name: "Board 2 (Doppelte Punkte)",
+      categories: ["Mythologie", "Weltraum", "Musik", "Sprachen", "Erfindungen"],
+      questions: {
+        Mythologie: {
+          200: { q: "Wer ist der Göttervater in der griechischen Mythologie?", a: "Zeus" },
+          400: { q: "Was ist der Name des nordischen Gott des Donners?", a: "Thor" },
+          600: { q: "Welche Kreatur bewacht den Eingang zur Unterwelt?", a: "Kerberos" },
+          800: { q: "Wer war die Göttin der Weisheit?", a: "Athene" },
+          1000: { q: "Welcher Gott hatte den römischen Namen Merkur?", a: "Hermes" },
+        },
+        Weltraum: {
+          200: { q: "Wie heißt der größte Planet unseres Sonnensystems?", a: "Jupiter" },
+          400: { q: "Wer war der erste Mensch auf dem Mond?", a: "Neil Armstrong" },
+          600: { q: "Was ist ein Schwarzes Loch?", a: "Ein Bereich mit so starker Gravitation, dass nichts entkommen kann" },
+          800: { q: "Wie lange dauert eine Erdumrundung der ISS?", a: "Ca. 90 Minuten" },
+          1000: { q: "Was ist der Name des Teleskops, das 1990 gestartet wurde?", a: "Hubble" },
+        },
+        Musik: {
+          200: { q: "Wer komponierte die 9. Symphonie?", a: "Ludwig van Beethoven" },
+          400: { q: "Welches Instrument hat 88 Tasten?", a: "Klavier" },
+          600: { q: "Wie heißt die Sängerin von 'Rolling in the Deep'?", a: "Adele" },
+          800: { q: "Welche Band war bekannt als 'Fab Four'?", a: "The Beatles" },
+          1000: { q: "Wer schrieb das Musical 'Hamilton'?", a: "Lin-Manuel Miranda" },
+        },
+        Sprachen: {
+          200: { q: "Welche Sprache hat die meisten Muttersprachler?", a: "Mandarin" },
+          400: { q: "Was bedeutet 'Bonjour' auf Deutsch?", a: "Guten Tag" },
+          600: { q: "Wie viele Fälle hat die deutsche Grammatik?", a: "Vier" },
+          800: { q: "Was ist Esperanto?", a: "Eine Plansprache" },
+          1000: { q: "Welches Alphabet verwendet Russisch?", a: "Kyrillisch" },
+        },
+        Erfindungen: {
+          200: { q: "Wer erfand die Glühbirne?", a: "Thomas Edison" },
+          400: { q: "Wann wurde das erste Automobil gebaut?", a: "Ende 19. Jahrhundert" },
+          600: { q: "Wer erfand das Telefon?", a: "Alexander Graham Bell" },
+          800: { q: "Was erfand Johannes Gutenberg?", a: "Den Buchdruck" },
+          1000: { q: "Wann wurde das Internet kommerziell verfügbar?", a: "1990er Jahre" },
+        }
+      }
+    }
+  ];
+
+  let currentBoardIndex = 0;
+  let players = [];
+
+  const board = document.getElementById("board");
+  const modal = document.getElementById("modal");
+  const modalQuestion = document.getElementById("modal-question");
+  const modalAnswer = document.getElementById("modal-answer");
+  const modalCategory = document.getElementById("modal-category");
+  const playersDiv = document.getElementById("players");
+  const boardTitle = document.getElementById("boardTitle");
+  const prevBoardBtn = document.getElementById("prevBoard");
+  const nextBoardBtn = document.getElementById("nextBoard");
+
+  function buildBoard() {
+    board.innerHTML = "";
+    const current = boards[currentBoardIndex];
+    boardTitle.innerText = `🎮 JEOPARDY ${current.name}`;
+
+    // Kategorien-Header
+    current.categories.forEach(category => {
+      const header = document.createElement("div");
+      header.className = "bg-yellow-500 text-black text-center font-bold py-3 text-lg uppercase rounded";
+      header.innerText = category;
+      board.appendChild(header);
+    });
+
+    // Punktewerte in aufsteigender Reihenfolge
+    const values = Object.keys(current.questions[current.categories[0]])
+      .map(Number)
+      .sort((a, b) => a - b);
+
+    for (let value of values) {
+      current.categories.forEach(category => {
+        const card = document.createElement("div");
+        card.className = "card bg-blue-800 text-5xl text-center py-8 rounded-xl font-bold shadow-lg";
+        card.innerText = value;
+        card.onclick = () => openQuestion(category, value, card);
+        board.appendChild(card);
+      });
+    }
+  }
+
+  function openQuestion(category, value, card) {
+    const current = boards[currentBoardIndex];
+    const data = current.questions[category][value];
+    if (!data) return;
+
+    modalCategory.innerText = `${category} – ${value} Punkte`;
+    modalQuestion.innerText = data.q;
+    modalAnswer.innerText = data.a;
+    modalAnswer.classList.add("hidden");
+    modal.style.display = "flex";
+
+    card.innerText = "";
+    card.classList.add("bg-gray-700");
+    card.onclick = null;
+  }
+
+  function showAnswer() {
+    modalAnswer.classList.remove("hidden");
+  }
+
+  function closeModal() {
+    modal.style.display = "none";
+  }
+
+  function addPlayerPrompt() {
+    const name = prompt("Spielername:");
+    if (name && name.trim() !== "") {
+      addPlayer(name.trim());
+    }
+  }
+
+  function addPlayer(name) {
+    // Prüfen ob Spieler schon existiert
+    if (players.some(p => p.name.toLowerCase() === name.toLowerCase())) {
+      alert("Spielername existiert bereits!");
+      return;
+    }
+
+    const player = { name, score: 0 };
+    players.push(player);
+
+    const container = document.createElement("div");
+    container.className = "bg-gray-800 px-6 py-4 rounded-xl text-center shadow-lg";
+
+    const nameEl = document.createElement("h3");
+    nameEl.className = "text-xl font-bold mb-2 text-yellow-300";
+    nameEl.innerText = name;
+
+    const scoreEl = document.createElement("p");
+    scoreEl.className = "text-3xl font-mono mb-4";
+    scoreEl.innerText = "0";
+
+    const btns = document.createElement("div");
+    btns.className = "flex gap-2 justify-center";
+
+    const minus = document.createElement("button");
+    minus.innerText = "–";
+    minus.className = "bg-red-600 hover:bg-red-700 px-4 py-2 rounded-full text-2xl font-bold";
+    minus.onclick = () => {
+      player.score -= 100;
+      scoreEl.innerText = player.score;
     };
 
-    const board = document.getElementById("board");
-    const modal = document.getElementById("modal");
-    const modalQuestion = document.getElementById("modal-question");
-    const modalAnswer = document.getElementById("modal-answer");
-    const modalCategory = document.getElementById("modal-category");
-    const playersDiv = document.getElementById("players");
+    const plus = document.createElement("button");
+    plus.innerText = "+";
+    plus.className = "bg-green-600 hover:bg-green-700 px-4 py-2 rounded-full text-2xl font-bold";
+    plus.onclick = () => {
+      player.score += 100;
+      scoreEl.innerText = player.score;
+    };
 
-    let players = [];
+    btns.appendChild(minus);
+    btns.appendChild(plus);
 
-    function buildBoard() {
-      categories.forEach(category => {
-        const header = document.createElement("div");
-        header.className = "bg-yellow-500 text-black text-center font-bold py-3 text-lg uppercase rounded";
-        header.innerText = category;
-        board.appendChild(header);
-      });
+    container.appendChild(nameEl);
+    container.appendChild(scoreEl);
+    container.appendChild(btns);
 
-      for (let value of [100, 200, 300, 400, 500]) {
-        categories.forEach(category => {
-          const card = document.createElement("div");
-          card.className = "card bg-blue-800 text-5xl text-center py-8 rounded-xl font-bold shadow-lg";
-          card.innerText = value;
-          card.onclick = () => openQuestion(category, value, card);
-          board.appendChild(card);
-        });
-      }
-    }
+    playersDiv.appendChild(container);
+  }
 
-    function openQuestion(category, value, card) {
-      const data = questions[category][value];
-      if (!data) return;
-
-      modalCategory.innerText = `${category} – ${value} Punkte`;
-      modalQuestion.innerText = data.q;
-      modalAnswer.innerText = data.a;
-      modalAnswer.classList.add("hidden");
-      modal.style.display = "flex";
-
-      card.innerText = "";
-      card.classList.add("bg-gray-700");
-      card.onclick = null;
-    }
-
-    function showAnswer() {
-      modalAnswer.classList.remove("hidden");
-    }
-
-    function closeModal() {
-      modal.style.display = "none";
-    }
-
-    function addPlayerPrompt() {
-      const name = prompt("Spielername:");
-      if (name && name.trim() !== "") {
-        addPlayer(name.trim());
-      }
-    }
-
-    function addPlayer(name) {
-      const player = { name, score: 0 };
-      players.push(player);
-
-      const container = document.createElement("div");
-      container.className = "bg-gray-800 px-6 py-4 rounded-xl text-center shadow-lg";
-
-      const nameEl = document.createElement("h3");
-      nameEl.className = "text-xl font-bold mb-2 text-yellow-300";
-      nameEl.innerText = name;
-
-      const scoreEl = document.createElement("p");
-      scoreEl.className = "text-3xl font-mono mb-4";
-      scoreEl.innerText = "0";
-
-      const btns = document.createElement("div");
-      btns.className = "flex gap-2 justify-center";
-
-      const minus = document.createElement("button");
-      minus.innerText = "–";
-      minus.className = "bg-red-600 hover:bg-red-700 px-4 py-2 rounded-full text-2xl font-bold";
-      minus.onclick = () => {
-        player.score -= 100;
-        scoreEl.innerText = player.score;
-      };
-
-      const plus = document.createElement("button");
-      plus.innerText = "+";
-      plus.className = "bg-green-600 hover:bg-green-700 px-4 py-2 rounded-full text-2xl font-bold";
-      plus.onclick = () => {
-        player.score += 100;
-        scoreEl.innerText = player.score;
-      };
-
-      btns.appendChild(minus);
-      btns.appendChild(plus);
-
-      container.appendChild(nameEl);
-      container.appendChild(scoreEl);
-      container.appendChild(btns);
-
-      playersDiv.appendChild(container);
-    }
-
+  prevBoardBtn.onclick = () => {
+    currentBoardIndex = (currentBoardIndex - 1 + boards.length) % boards.length;
     buildBoard();
-  </script>
+  };
+
+  nextBoardBtn.onclick = () => {
+    currentBoardIndex = (currentBoardIndex + 1) % boards.length;
+    buildBoard();
+  };
+
+  // Spieler hinzufügen Button (am Header)
+  const addPlayerBtn = document.createElement("button");
+  addPlayerBtn.innerText = "+ Spieler hinzufügen";
+  addPlayerBtn.className = "bg-yellow-400 text-black font-bold px-6 py-2 rounded-full shadow-lg fixed top-6 right-6 hover:bg-yellow-300";
+  addPlayerBtn.onclick = addPlayerPrompt;
+  document.body.appendChild(addPlayerBtn);
+
+  buildBoard();
+</script>
 </body>
 </html>
